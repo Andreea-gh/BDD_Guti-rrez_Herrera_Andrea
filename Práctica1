@@ -1,0 +1,90 @@
+ Práctica 1
+ 
+ PROBLEMA 1: Listar los alumnos con estatus de regular
+ -- (considere que un alumno regular puede tener no aprobada como máximo una materia)
+ -- El conjunto Aprob seran todos los alumnos
+ -- El conjunto Reprob son los alumnos reprobados
+ 
+
+ select distinct  Aprob.idEstudiante, Aprob.Nombre, Aprob.Apellido1, Aprob.Apellido2 from(
+  select distinct  idEstudiante,Nombre, Apellido1, Apellido2 from Estudiante
+ inner join Estudiante_has_Curso has 
+ on idEstudiante = Estudiante_idestudiante) as Aprob
+ left join(
+ select  idEstudiante,Nombre, Apellido1, Apellido2 from Estudiante
+ inner join Estudiante_has_Curso has 
+ on idEstudiante = Estudiante_idestudiante
+ where Calificacion <6
+ group by  idEstudiante,Nombre, Apellido1, Apellido2
+ having count(Nombre)>1
+ ) as Reprob
+ on Aprob.Nombre =B.Nombre
+ where Reprob.Nombre is  NULL;
+ 
+ 
+ PROBLEMA 2
+ 
+ Listar el porcentaje de no aprobados por materia en los semestres 20212 y 20221 
+
+ create view repT as Select C.Curso_Materia_idmateria,C.al from(
+ select  Curso_Materia_idmateria,count(Curso_Materia_idmateria) as al
+ from Estudiante_has_Curso
+ group by Curso_Materia_idmateria) as C
+ inner join(
+
+ select   Curso_Materia_idmateria
+ from Estudiante_has_Curso
+ where calificacion <6
+ group by Curso_Materia_idmateria ) as D
+ on C.Curso_Materia_idmateria = D.Curso_Materia_idmateria;
+
+CREATE TEMPORARY TABLE rep (id int auto_increment,materia varchar(20),cal int, primary key (id)); 
+insert into rep ( `materia`,`cal`)  select  Curso_Materia_idmateria,count(*) as al
+ from Estudiante_has_Curso
+ where calificacion <6
+ group by Curso_Materia_idmateria;
+
+ call CursoSemestre.porcentaje();
+
+
+PROBLEMA 3
+Listar los profesores que aprobaron a todos sus alumnos en todas sus materias
+select distinct Profesor_idprofesor
+from Curso as cu, Estudiante_has_Curso as Es
+where cu.Grupo=Es.Curso_Grupo and calificacion >5;
+
+
+PROBLEMA 4
+Listar los profesores con el mayor porcentaje de no aprobados en los semestres 20212 y 20221
+
+
+create view TotalAl as select c.Profesor_idprofesor , count(*) as "total_alumnos"
+from Curso c inner join Estudiante_has_Curso ce
+on c.Grupo = ce.Curso_Grupo and c.Materia_idmateria = ce.Curso_Materia_idmateria
+group by c.Profesor_idprofesor;
+
+CREATE TEMPORARY TABLE al_rep (id int auto_increment,profe int,cant int, primary key (id)); 
+insert into al_rep ( `profe`,`cant`) select c.Profesor_idprofesor , count(*) as total_no_aprobados
+from Curso c inner join Estudiante_has_Curso ce
+on c.Grupo = ce.Curso_Grupo and c.Materia_idmateria = ce.Curso_Materia_idmateria
+and ce.Calificacion <= 5
+group by c.Profesor_idprofesor;
+
+
+call CursoSemestre.porcentaje2();
+
+
+PROBLEMA 5
+Determinar si en la materia T302 existe un porcentaje de no aprobados 
+
+ call CursoSemestre.porcentaje();
+
+ PROBLEMA 6
+
+ select distinct B.Nombre, B.Apellido1,B.Apellido2 from(select c.Profesor_idprofesor,ce.Estudiante_idestudiante
+from Curso c inner join Estudiante_has_Curso ce
+on c.Grupo = ce.Curso_Grupo and c.Materia_idmateria = ce.Curso_Materia_idmateria
+where c.Profesor_idprofesor = '10275287' and ce.Calificacion >5
+group by c.Profesor_idprofesor,ce.Estudiante_idestudiante) as A
+inner join(select idEstudiante,Nombre, Apellido1,Apellido2 from Estudiante) as B
+on A.Estudiante_idestudiante=B.idEstudiante;
